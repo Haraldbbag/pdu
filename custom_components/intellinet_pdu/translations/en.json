@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Intellinet IP PDU",
+        "description": "Add one power strip (8 outlets).",
+        "data": {
+          "host": "IP address",
+          "username": "User name",
+          "password": "Password",
+          "name": "Name (empty = system name of the PDU)",
+          "prefix": "Entity ID prefix, e.g. b1 gives switch.pdu_b1_01 (optional)",
+          "first_outlet": "Number of the first outlet (e.g. 9 for the second strip)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "PDU not reachable.",
+      "invalid_auth": "Wrong user name or password."
+    },
+    "abort": {
+      "already_configured": "This PDU is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Outlets",
+        "description": "Name of the device on each outlet. Empty = numbered. Entity IDs stay unchanged.",
+        "data": {
+          "scan_interval": "Polling interval (seconds)",
+          "name_1": "Outlet 1",
+          "name_2": "Outlet 2",
+          "name_3": "Outlet 3",
+          "name_4": "Outlet 4",
+          "name_5": "Outlet 5",
+          "name_6": "Outlet 6",
+          "name_7": "Outlet 7",
+          "name_8": "Outlet 8"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current": { "name": "Current" },
+      "temperature": { "name": "Temperature" },
+      "humidity": { "name": "Humidity" },
+      "status": { "name": "Status" }
+    },
+    "binary_sensor": {
+      "connected": { "name": "Reachable" }
+    }
+  },
+  "services": {
+    "set_outlets": {
+      "name": "Set outlets",
+      "description": "Switches several outlets in one request per PDU (uses the delays configured in the PDU).",
+      "fields": {
+        "entity_id": { "name": "Outlets", "description": "Outlet switches of this integration." },
+        "state": { "name": "State", "description": "on or off." }
+      }
+    }
+  }
+}

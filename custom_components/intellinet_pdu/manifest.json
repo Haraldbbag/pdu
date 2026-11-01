@@ -1,0 +1,12 @@
+{
+  "domain": "intellinet_pdu",
+  "name": "Intellinet IP PDU",
+  "codeowners": ["@Haraldbbag"],
+  "config_flow": true,
+  "documentation": "https://github.com/Haraldbbag/pdu",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Haraldbbag/pdu/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

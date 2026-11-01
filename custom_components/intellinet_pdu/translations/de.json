@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Intellinet IP PDU",
+        "description": "Eine Steckdosenleiste (8 Ausgänge) hinzufügen.",
+        "data": {
+          "host": "IP-Adresse",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "name": "Name (leer = Systemname der Leiste)",
+          "prefix": "Kürzel für Entity-IDs, z. B. b1 ergibt switch.pdu_b1_01 (optional)",
+          "first_outlet": "Nummer der ersten Dose (z. B. 9 für die zweite Leiste)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Leiste nicht erreichbar.",
+      "invalid_auth": "Benutzername oder Passwort falsch."
+    },
+    "abort": {
+      "already_configured": "Diese Leiste ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Steckdosen",
+        "description": "Name des Geräts an jeder Dose. Leer = durchnummeriert. Die Entity-IDs bleiben unverändert.",
+        "data": {
+          "scan_interval": "Abfrageintervall (Sekunden)",
+          "name_1": "Dose 1",
+          "name_2": "Dose 2",
+          "name_3": "Dose 3",
+          "name_4": "Dose 4",
+          "name_5": "Dose 5",
+          "name_6": "Dose 6",
+          "name_7": "Dose 7",
+          "name_8": "Dose 8"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current": { "name": "Strom" },
+      "temperature": { "name": "Temperatur" },
+      "humidity": { "name": "Luftfeuchte" },
+      "status": { "name": "Status" }
+    },
+    "binary_sensor": {
+      "connected": { "name": "Erreichbar" }
+    }
+  },
+  "services": {
+    "set_outlets": {
+      "name": "Dosen schalten",
+      "description": "Schaltet mehrere Dosen mit einem Aufruf je Leiste (nutzt die in der Leiste eingestellte Verzögerung).",
+      "fields": {
+        "entity_id": { "name": "Dosen", "description": "Dosen-Schalter dieser Integration." },
+        "state": { "name": "Zustand", "description": "on oder off." }
+      }
+    }
+  }
+}

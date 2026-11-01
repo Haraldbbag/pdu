@@ -1,0 +1,16 @@
+set_outlets:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: intellinet_pdu
+          domain: switch
+          multiple: true
+    state:
+      required: true
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
