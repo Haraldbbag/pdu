@@ -137,7 +137,7 @@ async def test_entities(hass: HomeAssistant, aioclient_mock) -> None:
     assert hass.states.get("switch.pdu_m1_09").state == "on"
     assert hass.states.get("switch.pdu_m1_10").state == "off"
     assert hass.states.get("switch.pdu_m1_16").state == "on"
-    assert hass.states.get("switch.pdu_m1_09").attributes["friendly_name"] == "PDU M1-1 Dose 09"
+    assert hass.states.get("switch.pdu_m1_09").attributes["friendly_name"] == "PDU M1-1 Out 9"
     assert hass.states.get("sensor.pdu_m1_1_strom") or hass.states.get("sensor.pdu_m1_1_current")
     states = {s.entity_id: s.state for s in hass.states.async_all("sensor")}
     assert "2.1" in states.values()
@@ -179,7 +179,7 @@ async def test_outlet_names_keep_entity_id(hass: HomeAssistant, aioclient_mock) 
     await hass.async_block_till_done()
     state = hass.states.get("switch.pdu_m1_09")
     assert state.attributes["friendly_name"] == "PDU M1-1 Projektor"
-    assert hass.states.get("switch.pdu_m1_10").attributes["friendly_name"] == "PDU M1-1 Dose 10"
+    assert hass.states.get("switch.pdu_m1_10").attributes["friendly_name"] == "PDU M1-1 Out 10"
     assert er.async_get(hass).async_get("switch.pdu_m1_09") is not None
 
 

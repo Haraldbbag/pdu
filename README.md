@@ -39,7 +39,7 @@ Die alten YAML-Schalter mit denselben IDs müssen **vorher** entfernt sein, sons
 ## Dosen benennen
 
 Gerät → Integration „Intellinet IP PDU“ → Leiste → **Konfigurieren**: pro Dose ein Name (z. B. „Projektor“).
-Leer = „Dose 01“ usw. Die Entity-IDs ändern sich dabei nicht. Hier lässt sich auch das Abfrageintervall einstellen (Standard 5 s).
+Leer = „Out 1“ … „Out 8“ (bzw. ab der ersten Dosennummer). Die Entity-IDs ändern sich dabei nicht. Hier lässt sich auch das Abfrageintervall einstellen (Standard 5 s).
 
 ## Hinweise
 

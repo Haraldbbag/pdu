@@ -26,17 +26,17 @@
     "step": {
       "init": {
         "title": "Steckdosen",
-        "description": "Name des Geräts an jeder Dose. Leer = durchnummeriert. Die Entity-IDs bleiben unverändert.",
+        "description": "Name des Geräts an jeder Dose. Leer = Out 1 … Out 8. Die Entity-IDs bleiben unverändert.",
         "data": {
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "name_1": "Dose 1",
-          "name_2": "Dose 2",
-          "name_3": "Dose 3",
-          "name_4": "Dose 4",
-          "name_5": "Dose 5",
-          "name_6": "Dose 6",
-          "name_7": "Dose 7",
-          "name_8": "Dose 8"
+          "name_1": "Out 1",
+          "name_2": "Out 2",
+          "name_3": "Out 3",
+          "name_4": "Out 4",
+          "name_5": "Out 5",
+          "name_6": "Out 6",
+          "name_7": "Out 7",
+          "name_8": "Out 8"
         }
       }
     }

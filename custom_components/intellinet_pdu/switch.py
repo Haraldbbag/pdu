@@ -48,7 +48,7 @@ class PduOutletSwitch(PduEntity, SwitchEntity):
         number = entry.data.get(CONF_FIRST_OUTLET, 1) + index
         self._attr_unique_id = f"{entry.unique_id or entry.entry_id}_outlet_{index}"
         # Name from the options ("Geräte zuordnen"), otherwise numbered.
-        self._attr_name = entry.options.get(outlet_name_key(index)) or f"Dose {number:02d}"
+        self._attr_name = entry.options.get(outlet_name_key(index)) or f"Out {number}"
         self._attr_extra_state_attributes = {"outlet": number, "pdu_outlet": index + 1}
         if prefix := entry.data.get(CONF_PREFIX):
             # Only a wish for the first creation; existing IDs are never changed.
