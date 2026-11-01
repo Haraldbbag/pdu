@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import re
+import time
 
 import aiohttp
 
@@ -20,6 +21,15 @@ _MAC = re.compile(r"(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}")
 # The labels contain double spaces ("Firmware  version").
 _FIRMWARE = re.compile(r"Firmware\s+version.*?(\d+\.\d+(?:\.\d+)?)", re.S | re.I)
 _SYSTEM_NAME = re.compile(r"System\s+name.*?value=\"([^\"]*)\"", re.S | re.I)
+_INPUT = re.compile(r"<input\b[^>]*>", re.I)
+_ATTR_NAME = re.compile(r"\bname\s*=\s*[\"']?([\w-]+)", re.I)
+_ATTR_VALUE = re.compile(r"\bvalue\s*=\s*[\"']?([^\"' >]*)", re.I)
+
+# Sent within this time, switch commands for one PDU go out as one request.
+BATCH_WINDOW = 0.4
+# Extra wait after the longest delay before the next control request.
+BUSY_MARGIN = 1.0
+DEFAULT_DELAY = 7
 
 
 class PduError(Exception):
@@ -93,6 +103,29 @@ def parse_device_info(text: str) -> PduDeviceInfo:
     )
 
 
+def parse_delays(text: str) -> tuple[list[int], list[int]]:
+    """Parse ON/OFF delays (ondlyN / ofdlyN inputs) from config_PDU.htm."""
+    values: dict[str, str] = {}
+    for tag in _INPUT.findall(text):
+        name = _ATTR_NAME.search(tag)
+        value = _ATTR_VALUE.search(tag)
+        if name and value:
+            values[name.group(1)] = value.group(1)
+
+    def read(prefix: str) -> list[int]:
+        result = []
+        for index in range(OUTLET_COUNT):
+            try:
+                result.append(max(0, int(values[f"{prefix}{index}"])))
+            except (KeyError, ValueError):
+                result.append(DEFAULT_DELAY)
+        return result
+
+    if not any(key.startswith("ondly") for key in values):
+        raise PduConnectionError("config_PDU.htm has no delay fields")
+    return read("ondly"), read("ofdly")
+
+
 class PduClient:
     """Talks to one PDU. Requests are sent one after another (simple firmware)."""
 
@@ -107,6 +140,14 @@ class PduClient:
         self._session = session
         self._auth = aiohttp.BasicAuth(username, password)
         self._lock = asyncio.Lock()
+        self._control_lock = asyncio.Lock()
+        self._busy_until = 0.0
+        self._pending: dict[int, bool] = {}
+        self._waiters: list[asyncio.Future[None]] = []
+        self._flush_task: asyncio.Task[None] | None = None
+        # Until read from the PDU, assume the longest usual delay.
+        self.on_delays = [DEFAULT_DELAY] * OUTLET_COUNT
+        self.off_delays = [DEFAULT_DELAY] * OUTLET_COUNT
 
     async def _get(
         self, path: str, params: dict[str, str] | None = None, auth: bool = True
@@ -134,11 +175,62 @@ class PduClient:
         """Read info_system.htm (needs password, so it also checks the login)."""
         return parse_device_info(await self._get("info_system.htm"))
 
+    async def get_delays(self) -> None:
+        """Read the ON/OFF delay of each outlet from config_PDU.htm."""
+        on, off = parse_delays(await self._get("config_PDU.htm"))
+        self.on_delays, self.off_delays = on, off
+
     async def set_outlets(self, indexes: list[int], turn_on: bool) -> None:
-        """Switch outlets (index 0..7) in one request."""
+        """Switch outlets (index 0..7) in one request.
+
+        The PDU switches them one after another with its own delays. A second
+        request while it is still working drops the waiting outlets, so the
+        next request waits until the previous one is done.
+        """
         wanted = sorted(set(indexes))
         if not wanted or any(i < 0 or i >= OUTLET_COUNT for i in wanted):
             raise ValueError(f"invalid outlet indexes: {indexes}")
         params = {f"outlet{i}": "1" for i in wanted}
         params["op"] = "0" if turn_on else "1"
-        await self._get("control_outlet.htm", params)
+        async with self._control_lock:
+            wait = self._busy_until - time.monotonic()
+            if wait > 0:
+                await asyncio.sleep(wait)
+            await self._get("control_outlet.htm", params)
+            delays = self.on_delays if turn_on else self.off_delays
+            self._busy_until = (
+                time.monotonic() + max(delays[i] for i in wanted) + BUSY_MARGIN
+            )
+
+    async def switch(self, index: int, turn_on: bool) -> None:
+        """Switch one outlet; calls arriving close together are sent as one request.
+
+        A scene switches each outlet separately. Collecting them keeps the
+        PDU's own staggering and avoids dropped outlets.
+        """
+        loop = asyncio.get_running_loop()
+        self._pending[index] = turn_on
+        waiter: asyncio.Future[None] = loop.create_future()
+        self._waiters.append(waiter)
+        if self._flush_task is None or self._flush_task.done():
+            self._flush_task = loop.create_task(self._flush())
+        await waiter
+
+    async def _flush(self) -> None:
+        await asyncio.sleep(BATCH_WINDOW)
+        while self._pending:
+            pending, self._pending = self._pending, {}
+            waiters, self._waiters = self._waiters, []
+            try:
+                for turn_on in (True, False):
+                    group = [i for i, value in pending.items() if value is turn_on]
+                    if group:
+                        await self.set_outlets(group, turn_on)
+            except Exception as err:  # noqa: BLE001 - handed to the callers
+                for waiter in waiters:
+                    if not waiter.done():
+                        waiter.set_exception(err)
+            else:
+                for waiter in waiters:
+                    if not waiter.done():
+                        waiter.set_result(None)

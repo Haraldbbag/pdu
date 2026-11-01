@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from custom_components.intellinet_pdu.api import parse_status
+from custom_components.intellinet_pdu.api import parse_delays, parse_status
 from custom_components.intellinet_pdu.const import DOMAIN
 
 HOST = "10.0.0.51"
@@ -44,8 +44,17 @@ def auto_enable(enable_custom_integrations):
     yield
 
 
+CONFIG = "".join(
+    f'<input type="text" name="otlt{i}" value="outlet{i + 1}">'
+    f'<input name="ondly{i}" type="text" value="{i}">'
+    f'<input value="{i}" name="ofdly{i}">'
+    for i in range(8)
+)
+
+
 def mock_pdu(aioclient_mock):
     aioclient_mock.get(f"http://{HOST}/status.xml", text=STATUS)
+    aioclient_mock.get(f"http://{HOST}/config_PDU.htm", text=CONFIG)
     aioclient_mock.get(f"http://{HOST}/info_system.htm", text=INFO)
     aioclient_mock.get(f"http://{HOST}/control_outlet.htm", text="ok")
 
@@ -87,6 +96,37 @@ def test_parse_status():
     assert status.humidity == 41
     assert status.status == "normal"
     assert status.outlets == [True, False, True, True, True, True, True, True]
+
+
+def test_parse_delays():
+    on, off = parse_delays(CONFIG)
+    assert on == [0, 1, 2, 3, 4, 5, 6, 7]
+    assert off == [0, 1, 2, 3, 4, 5, 6, 7]
+
+
+async def test_scene_like_calls_become_one_request(hass: HomeAssistant, aioclient_mock) -> None:
+    """Several switch calls at once (as a scene does) go out as one request;
+    outlets already in the wanted state are left out."""
+    mock_pdu(aioclient_mock)
+    await setup_entry(hass)
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": ["switch.pdu_m1_09", "switch.pdu_m1_10", "switch.pdu_m1_16"]},
+        blocking=True,
+    )
+    # 09 and 16 are already on, only 10 (index 1) is sent
+    assert control_calls(aioclient_mock) == [{"outlet1": "1", "op": "0"}]
+    aioclient_mock.mock_calls.clear()
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": ["switch.pdu_m1_11", "switch.pdu_m1_15", "switch.pdu_m1_16"]},
+        blocking=True,
+    )
+    assert control_calls(aioclient_mock) == [
+        {"outlet2": "1", "outlet6": "1", "outlet7": "1", "op": "1"}
+    ]
 
 
 async def test_config_flow(hass: HomeAssistant, aioclient_mock) -> None:

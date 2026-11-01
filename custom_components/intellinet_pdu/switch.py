@@ -76,10 +76,17 @@ class PduOutletSwitch(PduEntity, SwitchEntity):
         await self._switch(False)
 
     async def _switch(self, turn_on: bool) -> None:
-        try:
-            await self.coordinator.client.set_outlets([self._index], turn_on)
-        except PduError as err:
-            raise HomeAssistantError(f"{self._entry.title}: {err}") from err
+        # Outlets already in the wanted state are not sent (a scene sets all of
+        # them; extra commands would only disturb the PDU's own sequence).
+        if self._pending is None and self.coordinator.data.outlets[self._index] is turn_on:
+            return
         self._pending = (turn_on, time.monotonic() + PENDING_SECONDS)
         self.async_write_ha_state()
+        try:
+            # Collected with other outlets of this PDU into one request.
+            await self.coordinator.client.switch(self._index, turn_on)
+        except PduError as err:
+            self._pending = None
+            self.async_write_ha_state()
+            raise HomeAssistantError(f"{self._entry.title}: {err}") from err
         await self.coordinator.async_request_refresh()

@@ -45,4 +45,5 @@ Leer = „Out 1“ … „Out 8“ (bzw. ab der ersten Dosennummer). Die Entity-
 
 - Die Leiste schaltet mit der eigenen Verzögerung (Configuration → PDU, 0–7 s je Dose). Der Schalter zeigt den neuen Zustand sofort an und gleicht sich danach mit der Leiste ab.
 - Anfragen an eine Leiste laufen nacheinander, nie parallel.
+- **Wichtig (getestet 01.11.2026):** Kommt ein zweiter Schaltbefehl, während die Leiste noch ihre Verzögerung abarbeitet, gehen wartende Dosen verloren. Die Integration sammelt deshalb Schaltbefehle, die innerhalb von 0,4 s kommen (z. B. aus einer Szene), zu **einem** Aufruf je Leiste, lässt Dosen weg, die schon richtig stehen, und wartet vor dem nächsten Aufruf, bis die Leiste fertig ist (Verzögerungen werden aus der Leiste gelesen).
 - Im Web-Interface der Leiste sind auf der Seite „Socket“ die Häkchen für Dose 2–8 vorausgewählt. Dort nie blind „Apply“ drücken.

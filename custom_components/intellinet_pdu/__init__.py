@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
+import logging
 
 import voluptuous as vol
 
@@ -25,6 +26,8 @@ from homeassistant.helpers.typing import ConfigType
 from .api import PduClient, PduError
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, SERVICE_SET_OUTLETS
 from .coordinator import PduCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
@@ -100,6 +103,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PduConfigEntry) -> bool:
         entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
     )
     await coordinator.async_config_entry_first_refresh()
+    try:
+        await client.get_delays()
+    except PduError as err:
+        _LOGGER.warning(
+            "%s: could not read outlet delays, assuming %s s: %s",
+            entry.title,
+            client.on_delays[0],
+            err,
+        )
     entry.runtime_data = PduData(client=client, coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

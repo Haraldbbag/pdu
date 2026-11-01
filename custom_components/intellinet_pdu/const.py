@@ -19,7 +19,7 @@ REQUEST_TIMEOUT = 5
 # The PDU switches with its own ON/OFF delay (0-7 s per outlet as configured).
 # For this long a switch shows the requested state even if status.xml still
 # reports the old one.
-PENDING_SECONDS = 12
+PENDING_SECONDS = 25
 
 SERVICE_SET_OUTLETS = "set_outlets"
 
