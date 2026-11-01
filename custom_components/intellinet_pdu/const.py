@@ -9,7 +9,9 @@ CONF_FIRST_OUTLET = "first_outlet"
 CONF_FIRMWARE = "firmware"
 CONF_MAC = "mac"
 
+# Factory login of the PDUs (not a secret, all strips use it).
 DEFAULT_USERNAME = "admin"
+DEFAULT_PASSWORD = "admin"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 2
 REQUEST_TIMEOUT = 5

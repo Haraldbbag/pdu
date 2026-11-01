@@ -29,7 +29,7 @@ Nicht vorhanden (bewusst): „Alle an/aus“ und Neustart pro Dose. Welche Dosen
 | Feld | Beispiel | Bedeutung |
 |---|---|---|
 | IP-Adresse | `10.49.55.51` | |
-| Benutzername / Passwort | `admin` / … | Login der Leiste |
+| Benutzername / Passwort | `admin` / `admin` (vorausgefüllt) | Werkslogin der Leisten |
 | Name | `PDU M1-1` | leer = Systemname aus der Leiste |
 | Kürzel für Entity-IDs | `m1` | ergibt `switch.pdu_m1_01` … Damit bleiben alte IDs erhalten |
 | Nummer der ersten Dose | `1` oder `9` | zweite Leiste eines Kinos beginnt bei 9 → `switch.pdu_m1_09…16` |

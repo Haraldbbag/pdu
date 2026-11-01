@@ -30,6 +30,7 @@ from .const import (
     CONF_FIRST_OUTLET,
     CONF_MAC,
     CONF_PREFIX,
+    DEFAULT_PASSWORD,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_USERNAME,
     DOMAIN,
@@ -91,7 +92,9 @@ class PduConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME)
                 ): str,
-                vol.Required(CONF_PASSWORD): str,
+                vol.Required(
+                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, DEFAULT_PASSWORD)
+                ): str,
                 vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
                 vol.Optional(CONF_PREFIX, default=user_input.get(CONF_PREFIX, "")): str,
                 vol.Required(
